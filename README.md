@@ -3,7 +3,7 @@
 ## Demo Now: https://nhl-grid-six.vercel.app/
 
 # Skills Used
--ReactJs, JSX, Vite, NodeJs, TailwindCSS, Webscraping
+ReactJs, JSX, Vite, NodeJs, TailwindCSS, Webscraping
 
 # Summary
 This is a knowledge based game inspired by the popular "Immaculate Grid" found on the SportsReference website.
