@@ -84,7 +84,7 @@ const Grid = () => {
         if (
           filteredData[key].teams &&
           filteredData[key].teams.length >= 3 &&
-          parseInt(filteredData[key].gamesPlayed) >= 300 &&
+          parseInt(filteredData[key].gamesPlayed) >= 250 &&
           firstProSeason >= 2000 &&
           firstProSeason <= currentYear
         ) {
