@@ -706,7 +706,7 @@ const Grid = () => {
               {todaysDate}
             </div>
             <div className="rounded-lg flex items-center text-white bg-cell-outline2 py-2 px-4 cursor-pointer">
-              HockeyGrid
+              Hockey Matrix
             </div>
             <div
               className="rounded-lg flex items-center text-white bg-blue-800 py-2 px-4 cursor-pointer hover:bg-blue-700"
