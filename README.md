@@ -6,7 +6,7 @@
 -ReactJs, JSX, Vite, NodeJs, TailwindCSS, Webscraping
 
 # Summary
--This is a knowledge based game inspired by the popular "Immaculate Grid" found on the SportsReference website.
+This is a knowledge based game inspired by the popular "Immaculate Grid" found on the SportsReference website.
 
 I put my own unique twist on it by reversing the logic. Traditionally, this type of game features an empty grid with team logos along 
 the perimeter, where the user has to match a player to an intersection of two teams. In my version, the user must match a team to an intersection of two players.
