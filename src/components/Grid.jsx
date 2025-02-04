@@ -3,14 +3,19 @@ import { teams } from "../../teams.js";
 import { useRef } from "react";
 
 function formatPlayer(randPlayer) {
-  if (!randPlayer) return ""; // Handle edge case
+  // handle edge case where player doesnt generate
+  if (!randPlayer) return "";
 
-  // Split the name into parts
+  // Split the name into parts based on spaces
   const nameParts = randPlayer.split(" ");
 
+  // if the name is broken up into 3 parts or more
+  // meaning someone has 2 last names
   if (nameParts.length > 2) {
-    let firstName = nameParts.slice(0, -1).join(" "); // All except last
-    let lastName = nameParts[nameParts.length - 1]; // Last part
+    // combine all parts of nameParts into single string except last part
+    let firstName = nameParts.slice(0, -1).join(" ");
+    // Get last part of name not joined above
+    let lastName = nameParts[nameParts.length - 1];
     return (
       <>
         {firstName} <br /> {lastName}
@@ -25,6 +30,7 @@ function formatPlayer(randPlayer) {
   }
 }
 const Grid = () => {
+  // set state for unformatted players that will display on menus
   const [player1, setPlayer1] = useState();
   const [player2, setPlayer2] = useState();
   const [player3, setPlayer3] = useState();
@@ -32,6 +38,7 @@ const Grid = () => {
   const [player5, setPlayer5] = useState();
   const [player6, setPlayer6] = useState();
 
+  // state for formatted players that will display on the grid
   const [formattedPlayer1, setFormattedPlayer1] = useState();
   const [formattedPlayer2, setFormattedPlayer2] = useState();
   const [formattedPlayer3, setFormattedPlayer3] = useState();
@@ -39,6 +46,7 @@ const Grid = () => {
   const [formattedPlayer5, setFormattedPlayer5] = useState();
   const [formattedPlayer6, setFormattedPlayer6] = useState();
 
+  // state for the teams arrays
   const [player1Teams, setPlayer1Teams] = useState();
   const [player2Teams, setPlayer2Teams] = useState();
   const [player3Teams, setPlayer3Teams] = useState();
@@ -48,61 +56,82 @@ const Grid = () => {
 
   async function getPlayers() {
     try {
+      // await for a response from fetch API
       const response = await fetch("everyNHLPlayerJan25.json");
 
       if (!response.ok) {
         throw new Error(`HTTP Error: ${response.status}`);
       }
-
+      // wait for response object to convert to json and store it in data
       const data = await response.json();
+      // if data is null/doesnt exist, or if array of object's keys (data) is empty
       if (!data || Object.keys(data).length === 0) {
         console.error("Returned empty data");
         return null;
       }
-
       // console.log(data);
 
+      // convert data object into an array of key value pairs
+      // .reduce() iterates over each pair to gather filtered results
+      // acc is the accumulator object that will hold the filtered data
+      // destructure into separate key, value
       const filteredData = Object.entries(data).reduce((acc, [key, value]) => {
-        // Check if all required properties are present and non-empty
+        // Check if all required properties exist and are non-empty
         if (
           value.firstYear &&
           value.gamesPlayed &&
           value.teams &&
           value.teams.length > 0
         ) {
+          // if properties exist, add them to the accumulator
           acc[key] = value;
         }
         return acc;
       }, {});
 
       const currentYear = new Date().getFullYear();
+      // array of filteredData keys iterated over destructured into acc and key
       const validPlayer = Object.keys(filteredData).reduce((acc, key) => {
+        // parse firstProSeason into an integer
         const firstProSeason = parseInt(
+          // only take first 4 digits of the firstProSeason
+          // in the object the string is formatted as "2005-06"
+          // so only take 2005
           filteredData[key].firstYear.substring(0, 4)
         );
 
         if (
+          // if teams property exists
           filteredData[key].teams &&
+          // and the length of that array is at least 3
+          // meaning the player has played for at least 3 different teams
           filteredData[key].teams.length >= 3 &&
+          // parse gamesPlayed as an integer and only grab if value greater than 300
           parseInt(filteredData[key].gamesPlayed) >= 300 &&
+          // make sure firstProSeason is somewhere between defined year and current year
           firstProSeason >= 2003 &&
           firstProSeason <= currentYear
         ) {
+          // add the key value pair to the accumulator object
           acc[key] = filteredData[key];
         }
         return acc;
       }, {});
+
+      // console the validPlayers variable so i can see how many players meet the criteria that i set
       console.log(
         "Valid Players:",
         validPlayer,
         Object.keys(validPlayer).length
       );
 
+      // if validPlayers doesnt exist then return error
       if (Object.keys(validPlayer).length === 0) {
         console.error("error");
         return;
       }
 
+      // store validPlayer variable in allValidPlayers variable
       let allValidPlayers = Object.keys(validPlayer);
 
       // display length of the json object array to the console
@@ -134,20 +163,25 @@ const Grid = () => {
           (player) => validPlayer[player].teams
         );
 
+        // create empty array to fill later
         let validColPlayerCandidate = [];
 
+        // for each key value pair of validPlayer
         Object.entries(validPlayer).forEach(
           ([candidatePlayer, candidateDetails]) => {
+            // candidateTeam is the array of teams
             let candidateTeam = candidateDetails.teams;
-
+            // iterate through teach team in candidateTeam. variable will contain all teams shared between candidateTeam and first element of teamsArray, which is the first player's teams in topRowPlayers
             let commonWithRandomPlayer1 = candidateTeam.filter((team) =>
               teamsArrays[0].includes(team)
             );
+            // find all teams shared between candidateTeam and second element of teamsArray and make sure it is not the same teams shared with the first player
             let commonWithRandomPlayer2 = candidateTeam.filter(
               (team) =>
                 teamsArrays[1].includes(team) &&
                 !commonWithRandomPlayer1.includes(team)
             );
+            // same as above but make sure not in common with first two players
             let commonWithRandomPlayer3 = candidateTeam.filter(
               (team) =>
                 teamsArrays[2].includes(team) &&
@@ -161,6 +195,7 @@ const Grid = () => {
               commonWithRandomPlayer2.length > 0 &&
               commonWithRandomPlayer3.length > 0
             ) {
+              // push the candidate players to the previously defined empty array
               validColPlayerCandidate.push(candidatePlayer);
             }
           }
@@ -170,6 +205,7 @@ const Grid = () => {
       }
 
       const topRowPlayers = [randomPlayer1, randomPlayer2, randomPlayer3];
+      // apply findValidColumnPlayer function to the validPlayers and topRowPlayers
       const playerColCandidates = findValidColumnPlayer(
         validPlayer,
         topRowPlayers
@@ -197,6 +233,7 @@ const Grid = () => {
         ];
       // console.log(randomPlayer6, validPlayer[randomPlayer6]);
 
+      // making sure no names are generated twice
       function verifyUniqueName(existingNames) {
         let generatedName;
         do {
@@ -244,6 +281,7 @@ const Grid = () => {
       const uniquePlayer5 = uniqueNames[4];
       const uniquePlayer6 = uniqueNames[5];
 
+      // return the name and teams array
       const result = {
         player1: {
           name: uniquePlayer1,
@@ -273,19 +311,22 @@ const Grid = () => {
 
       console.log("playerdata", result);
       return result;
-
     } catch (error) {
       console.error("error in getPlayers()", error);
       return null;
     }
   }
 
-   async function getStoredPlayers() {
+  // get players stored locally
+  async function getStoredPlayers() {
     const storedPlayers = localStorage.getItem("playerData");
+    // if there are players in local storage
     if (storedPlayers) {
       try {
+        // parse json string to an object
         const players = JSON.parse(storedPlayers);
         console.log("stored data", players);
+        // if the players exist
         if (
           players.player1 &&
           players.player2 &&
@@ -294,9 +335,11 @@ const Grid = () => {
           players.player5 &&
           players.player6
         ) {
+          // if they exist then set them to the DOM
           setPlayers(players);
           return;
         } else {
+          // otherwise remove the players from the storage
           console.error("Invalid players structure in localStorage:", players);
           localStorage.removeItem("playerData");
         }
@@ -306,10 +349,14 @@ const Grid = () => {
       }
     }
 
+    // generate new players instead
     console.log("no players in storage. calling getPlayers() now...");
+    // wait for getPlayers function to run
     const newPlayers = await getPlayers();
+    // if the players are generated
     if (newPlayers) {
       console.log("new players generated", newPlayers);
+      // set the players to local storage and convert them to a json string
       localStorage.setItem("playerData", JSON.stringify(newPlayers));
       setPlayers(newPlayers);
     } else {
@@ -324,7 +371,7 @@ const Grid = () => {
       );
       return;
     }
-
+    // apply formatPlayer function to each player generated
     setFormattedPlayer1(formatPlayer(players.player1.name));
     setFormattedPlayer2(formatPlayer(players.player2.name));
     setFormattedPlayer3(formatPlayer(players.player3.name));
@@ -332,6 +379,7 @@ const Grid = () => {
     setFormattedPlayer5(formatPlayer(players.player5.name));
     setFormattedPlayer6(formatPlayer(players.player6.name));
 
+    // also set unformatted player for purpose of using in menus and such. we only want the formatted version on the grid itself, not anywhere else. thats why we are setting two versions of player names
     setPlayer1(players.player1.name);
     setPlayer2(players.player2.name);
     setPlayer3(players.player3.name);
@@ -347,6 +395,7 @@ const Grid = () => {
     setPlayer6Teams(players.player6.teams);
   }
 
+  // when Play Again button is pressed reset everything, remove players from local storage and generate new players and set them to local storage
   const startNewGame = async () => {
     setGameOver(false);
     setShowSummary(false);
@@ -366,16 +415,21 @@ const Grid = () => {
     getStoredPlayers();
   }, []);
 
+  // the menu for choosing teams
   const [isOpen, setIsOpen] = useState(false);
   // controls visibility of results button
   const [gameOver, setGameOver] = useState(false);
   // controls display of results summary pop up
   const [showSummary, setShowSummary] = useState(false);
+  // the individual teams in the options menu
   const [selectedTeam, setSelectedTeam] = useState();
+  // the cell clicked on by user is the active one
   const [activeCellId, setActiveCellId] = useState(null);
+  // correct answer
   const [correctAnswer, setCorrectAnswer] = useState(null);
-  const [logoURL, setLogoURL] = useState();
+  // take data associated with the gameState key that is in local storage and parse it from a JSON string into an object stored in savedGameState variable, or empty object if nothing exists
   const savedGameState = JSON.parse(localStorage.getItem("gameState")) || {};
+  // logos that appear in the grid cells. either use previously stored state or fresh empty object. same logic applies below for guesses and score
   const [logos, setLogos] = useState(savedGameState.logos || {});
   const [guessCount, setGuessCount] = useState(savedGameState.guessCount || 12);
   const [scoreCount, setScoreCount] = useState(savedGameState.scoreCount || 0);
@@ -383,15 +437,18 @@ const Grid = () => {
 
   let menuRef = useRef();
 
+  // after component mounts, run the effect. run the effect every time of of the three dependencies changes
   useEffect(() => {
     const gameState = {
       scoreCount,
       guessCount,
       logos,
     };
+    // localStorage API can only store strings so convert the gameState to a string
     localStorage.setItem("gameState", JSON.stringify(gameState));
   }, [scoreCount, guessCount, logos]);
 
+  // on component mount only set gameState
   useEffect(() => {
     if (savedGameState) {
       setScoreCount(scoreCount);
@@ -400,6 +457,7 @@ const Grid = () => {
     }
   }, []);
 
+  // on component mount only, set the current date
   useEffect(() => {
     const date = new Date();
     const formattedDate = `${date.getMonth() + 1}/${date.getDate()}/${date
@@ -409,6 +467,7 @@ const Grid = () => {
     setTodaysDate(formattedDate);
   }, []);
 
+  // the functionality for being able to click out of a menu/popup
   useEffect(() => {
     let handler = (e) => {
       if (menuRef.current && menuRef.current === e.target) {
@@ -425,6 +484,7 @@ const Grid = () => {
     };
   }, []);
 
+  // when state of dependencies change to meet the conditions, set the state of gameOver and showSummary
   useEffect(() => {
     if (guessCount === 0 || scoreCount === 9) {
       setGameOver(true);
@@ -432,14 +492,17 @@ const Grid = () => {
     }
   }, [guessCount, scoreCount]);
 
+  // toggle the results button on and off
   const toggleResultSummary = () => {
     setShowSummary((prev) => !prev);
   };
 
+  // the "close" button on the pop up that simply closes the summary
   const closeSummary = () => {
     setShowSummary(false);
   };
 
+  // the disabling of the scrollbar when either the teams menu is open or the end of game summary
   useEffect(() => {
     if (isOpen || showSummary === true) {
       document.body.classList.add("overflow-hidden", "pr-scrollbar", "bg-bg");
@@ -477,12 +540,14 @@ const Grid = () => {
 
   // handle all 9 player comparisons based on active cell
   const handleSelect = (team) => {
+    // create a new copy of logos as to not modify logos itself
     const newLogos = { ...logos, [activeCellId]: team.logoURL };
     console.log("active cell: ", activeCellId);
     console.log("Selected Team:", team.name);
     setSelectedTeam(team.name);
 
     if (activeCellId === "cell1") {
+      // the correct answer will be the team selected that is common in both playerXTeams arrays
       const isCorrectAnswer =
         player1Teams.some((abbr) => team.abbr.includes(abbr)) &&
         player4Teams.some((abbr) => team.abbr.includes(abbr));
@@ -490,6 +555,7 @@ const Grid = () => {
       // decrement guess
       setGuessCount((prevCount) => Math.max(prevCount - 1, 0));
 
+      // if the correctAnswer exists, set that logo to the grid, increment the score, decrement the guess, close the menu. repeat for all 9 cells
       if (isCorrectAnswer) {
         console.log("correct match");
         setLogos(newLogos);
@@ -640,12 +706,14 @@ const Grid = () => {
     }
   };
 
+  // when a cell is clicked, set that cell to active and open the menu
   const toggleIsOpen = (cellId) => {
     console.log("Selected Cell:", cellId);
     setActiveCellId(cellId);
     setIsOpen((prev) => !prev);
   };
 
+  // has the activeCellId dependency, this effect is not necessary really, just allows me to see each player's name and teams array in the console so that I can see the answers
   useEffect(() => {
     // prevents running this on initial render
     if (!activeCellId) return;
@@ -688,14 +756,17 @@ const Grid = () => {
       return;
     }
 
-    console.log(`PlayerA:`, playerA, playerATeams);
-    console.log(`PlayerB:`, playerB, playerBTeams);
+    // keep it commented out for now
+    // console.log(`PlayerA:`, playerA, playerATeams);
+    // console.log(`PlayerB:`, playerB, playerBTeams);
   }, [activeCellId]);
 
+  // for the rules button. when clicked, scroll all the way to bottom which is where the rules are located
   function scrollToBottom() {
     window.scrollTo(0, document.body.scrollHeight);
   }
 
+  // all of the front end stuff
   return (
     <section className="flex justify-center items-start max-h-screen w-full border-0">
       <div className="flex flex-col items-center w-full max-w-6xl border-0">
