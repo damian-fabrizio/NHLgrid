@@ -107,7 +107,7 @@ const Grid = () => {
           // meaning the player has played for at least 3 different teams
           filteredData[key].teams.length >= 3 &&
           // parse gamesPlayed as an integer and only grab if value greater than 300
-          parseInt(filteredData[key].gamesPlayed) >= 300 &&
+          parseInt(filteredData[key].gamesPlayed) >= 200 &&
           // make sure firstProSeason is somewhere between defined year and current year
           firstProSeason >= 2003 &&
           firstProSeason <= currentYear
